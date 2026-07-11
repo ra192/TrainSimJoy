@@ -28,11 +28,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct
-{
-    uint8_t  report_id;   /* must be 1, matches Report ID in descriptor */
-    uint16_t buttons;     /* bit n = button n, 1 = pressed */
-} GamepadReport_t;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -50,7 +46,8 @@ typedef struct
 /* USER CODE BEGIN PV */
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-static GamepadReport_t s_report = { .report_id = 1, .buttons = 0 };
+/* Report layout: [report_id][buttons_low][buttons_high] */
+static uint8_t s_report[3] = { 1, 0, 0 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -104,9 +101,12 @@ int main(void)
   while (1)
   {
     ButtonBitmap_t button_state = ButtonMatrix_Scan();
-    s_report.buttons = (uint16_t)(button_state & 0xFFFF); /* only 16 buttons, ignore the rest */
+    s_report[1] = (uint8_t)(button_state & 0xFF);
+    s_report[2] = (uint8_t)((button_state >> 8) & 0xFF);
     
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, (uint8_t*)&s_report, sizeof(s_report));
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, s_report, sizeof(s_report));
+
+    HAL_Delay(10); /* 10ms delay, adjust as needed for your application */
     
     /* USER CODE END WHILE */
 

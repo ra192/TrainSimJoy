@@ -73,7 +73,7 @@ ButtonBitmap_t ButtonMatrix_Scan(void)
         if (s_agree_count[i] >= MATRIX_DEBOUNCE_COUNT)
         {
             s_stable_state &= ~(1UL << i);
-            s_stable_state |= ((ButtonBitmap_t)candidate_bit << i);
+            s_stable_state |= ((ButtonBitmap_t)raw_bit << i);
         }
     }
  
