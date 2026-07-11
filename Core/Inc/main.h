@@ -65,14 +65,22 @@ void Error_Handler(void);
 #define BTN_C3_GPIO_Port GPIOB
 #define BTN_C4_Pin GPIO_PIN_15
 #define BTN_C4_GPIO_Port GPIOB
-#define BTN_R1_Pin GPIO_PIN_8
-#define BTN_R1_GPIO_Port GPIOA
-#define BTN_R2_Pin GPIO_PIN_9
-#define BTN_R2_GPIO_Port GPIOA
-#define BTN_R3_Pin GPIO_PIN_10
-#define BTN_R3_GPIO_Port GPIOA
-#define BTN_R4_Pin GPIO_PIN_15
-#define BTN_R4_GPIO_Port GPIOA
+#define BTN_C5_Pin GPIO_PIN_8
+#define BTN_C5_GPIO_Port GPIOA
+#define BTN_C6_Pin GPIO_PIN_9
+#define BTN_C6_GPIO_Port GPIOA
+#define BTN_C7_Pin GPIO_PIN_10
+#define BTN_C7_GPIO_Port GPIOA
+#define BTN_C8_Pin GPIO_PIN_15
+#define BTN_C8_GPIO_Port GPIOA
+#define BTN_R1_Pin GPIO_PIN_3
+#define BTN_R1_GPIO_Port GPIOB
+#define BTN_R2_Pin GPIO_PIN_4
+#define BTN_R2_GPIO_Port GPIOB
+#define BTN_R3_Pin GPIO_PIN_5
+#define BTN_R3_GPIO_Port GPIOB
+#define BTN_R4_Pin GPIO_PIN_6
+#define BTN_R4_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

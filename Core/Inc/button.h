@@ -5,7 +5,7 @@
 
 /* ---------------- Matrix geometry ---------------- */
 #define MATRIX_ROWS   4
-#define MATRIX_COLS   4
+#define MATRIX_COLS   8
 #define MATRIX_BUTTON_COUNT   (MATRIX_ROWS * MATRIX_COLS)
 
 /* Number of consecutive matching scans required before a state change

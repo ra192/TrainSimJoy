@@ -17,6 +17,10 @@ const MatrixPin_t g_matrix_cols[MATRIX_COLS] =
     { BTN_C2_GPIO_Port, BTN_C2_Pin },
     { BTN_C3_GPIO_Port, BTN_C3_Pin },
     { BTN_C4_GPIO_Port, BTN_C4_Pin },
+    { BTN_C5_GPIO_Port, BTN_C5_Pin },
+    { BTN_C6_GPIO_Port, BTN_C6_Pin },
+    { BTN_C7_GPIO_Port, BTN_C7_Pin },
+    { BTN_C8_GPIO_Port, BTN_C8_Pin },
 };
 
 static ButtonBitmap_t s_stable_state    = 0;

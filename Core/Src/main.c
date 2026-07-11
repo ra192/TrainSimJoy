@@ -46,8 +46,8 @@
 /* USER CODE BEGIN PV */
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-/* Report layout: [report_id][buttons_low][buttons_high] */
-static uint8_t s_report[3] = { 1, 0, 0 };
+/* Report layout: [report_id][buttons0][buttons1][buttons2][buttons3] */
+static uint8_t s_report[5] = { 1, 0, 0, 0, 0 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,6 +103,8 @@ int main(void)
     ButtonBitmap_t button_state = ButtonMatrix_Scan();
     s_report[1] = (uint8_t)(button_state & 0xFF);
     s_report[2] = (uint8_t)((button_state >> 8) & 0xFF);
+    s_report[3] = (uint8_t)((button_state >> 16) & 0xFF);
+    s_report[4] = (uint8_t)((button_state >> 24) & 0xFF);
     
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, s_report, sizeof(s_report));
 
@@ -180,7 +182,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BTN_R1_Pin|BTN_R2_Pin|BTN_R3_Pin|BTN_R4_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, BTN_R1_Pin|BTN_R2_Pin|BTN_R3_Pin|BTN_R4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : BTN_C1_Pin BTN_C2_Pin BTN_C3_Pin BTN_C4_Pin */
   GPIO_InitStruct.Pin = BTN_C1_Pin|BTN_C2_Pin|BTN_C3_Pin|BTN_C4_Pin;
@@ -188,12 +190,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : BTN_C5_Pin BTN_C6_Pin BTN_C7_Pin BTN_C8_Pin */
+  GPIO_InitStruct.Pin = BTN_C5_Pin|BTN_C6_Pin|BTN_C7_Pin|BTN_C8_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : BTN_R1_Pin BTN_R2_Pin BTN_R3_Pin BTN_R4_Pin */
   GPIO_InitStruct.Pin = BTN_R1_Pin|BTN_R2_Pin|BTN_R3_Pin|BTN_R4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
