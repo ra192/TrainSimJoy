@@ -81,6 +81,12 @@ void Error_Handler(void);
 #define BTN_R3_GPIO_Port GPIOB
 #define BTN_R4_Pin GPIO_PIN_6
 #define BTN_R4_GPIO_Port GPIOB
+#define BTN_R5_Pin GPIO_PIN_7
+#define BTN_R5_GPIO_Port GPIOB
+#define BTN_R6_Pin GPIO_PIN_8
+#define BTN_R6_GPIO_Port GPIOB
+#define BTN_R7_Pin GPIO_PIN_9
+#define BTN_R7_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

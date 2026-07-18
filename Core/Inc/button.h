@@ -2,9 +2,10 @@
 #define BUTTON_H
 
 #include "main.h"
+#include <stdint.h>
 
 /* ---------------- Matrix geometry ---------------- */
-#define MATRIX_ROWS   4
+#define MATRIX_ROWS   7
 #define MATRIX_COLS   8
 #define MATRIX_BUTTON_COUNT   (MATRIX_ROWS * MATRIX_COLS)
 
@@ -24,17 +25,12 @@ typedef struct
 extern const MatrixPin_t g_matrix_rows[MATRIX_ROWS];
 extern const MatrixPin_t g_matrix_cols[MATRIX_COLS];
 
-/* Bitmap of debounced button states, bit n = button n, 1 = pressed.
- * Sized for up to 32 buttons; only the low MATRIX_BUTTON_COUNT bits
- * are meaningful for the current geometry. */
-typedef uint32_t ButtonBitmap_t;
-
 /**
  * @brief Scan the full matrix once, apply debounce, and return the
  *        current stable button bitmap.
  * @return Debounced bitmap, bit n set = button n pressed.
  */
-ButtonBitmap_t ButtonMatrix_Scan(void);
+uint8_t* ButtonMatrix_Scan(void);
 
 
 #endif // BUTTON_H
