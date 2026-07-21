@@ -92,7 +92,7 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 {
   /* USER CODE BEGIN 0 */
     0x05, 0x01,        /* Usage Page (Generic Desktop) */
-    0x09, 0x05,        /* Usage (Game Pad) */
+    0x09, 0x04,        /* Usage (Joystick) */
     0xA1, 0x01,        /* Collection (Application) */
     0x85, 0x01,        /*   Report ID (1) */
     0x05, 0x09,        /*   Usage Page (Button) */
