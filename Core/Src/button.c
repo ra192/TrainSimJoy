@@ -40,7 +40,7 @@ uint8_t* ButtonMatrix_Scan(void)
 
         for (int c = 0; c < MATRIX_COLS; c++)
         {
-            GPIO_PinState pin_state = HAL_GPIO_ReadPin(g_matrix_cols[c].port, g_matrix_cols[c].pin);
+            GPIO_PinState pin_state = !HAL_GPIO_ReadPin(g_matrix_cols[c].port, g_matrix_cols[c].pin);
             bool candidate_bit = (s_candidate_state[r] >>c) & 0x1;
             int button_index = r * MATRIX_COLS + c;
             
