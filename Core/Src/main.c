@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2026 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -22,8 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usbd_custom_hid_if.h"
 #include "button.h"
+#include "usbd_custom_hid_if.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +34,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define MASTER_CTRL_RPT_ROW 6
+
+#define FORWARD_1_SWITCH_MASK 0x80 // button 48
+#define POS_2_SWITCH_MASK 0x04     // button 43
+#define FORWARD_3_SWITCH_MASK 0x08 // button 44
+#define BREAK_1_SWITCH_MASK 0x10   // button 45
+#define BREAK_3_SWITCH_MASK 0x20   // button 46
 
 /* USER CODE END PD */
 
@@ -46,8 +54,8 @@
 /* USER CODE BEGIN PV */
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-/* Report layout: [report_id][buttons0][buttons1][buttons2][buttons3] */
-static uint8_t s_report[8] = { 1, 0, 0, 0, 0, 0, 0, 0 };
+/* Report layout: [report_id][buttons0][buttons1]..[buttons7] */
+static uint8_t s_report[8] = {1, 0, 0, 0, 0, 0, 0, 0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,11 +71,10 @@ static void MX_GPIO_Init(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
 
   /* USER CODE BEGIN 1 */
 
@@ -75,7 +82,8 @@ int main(void)
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
+   */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -98,21 +106,46 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    uint8_t* button_state = ButtonMatrix_Scan();
-    s_report[1] = button_state[0];
-    s_report[2] = button_state[1];
-    s_report[3] = button_state[2];
-    s_report[4] = button_state[3];
-    s_report[5] = button_state[4];
-    s_report[6] = button_state[5];
-    s_report[7] = button_state[6];
-    
+  while (1) {
+    uint8_t *button_state = ButtonMatrix_Scan();
+    for (int i = 0; i < MATRIX_ROWS; i++) {
+      s_report[i + 1] = button_state[i];
+    }
+
+    // Change master control report mappings
+    // if position 2 switch is pressed, check for forward 1 and break 1 switches
+    if (s_report[MASTER_CTRL_RPT_ROW] & POS_2_SWITCH_MASK) {
+
+      // Forward branch if forward 1 switch is pressed
+      if (s_report[MASTER_CTRL_RPT_ROW] & FORWARD_1_SWITCH_MASK) {
+        if (s_report[MASTER_CTRL_RPT_ROW] & FORWARD_3_SWITCH_MASK) {
+          // Forward 3 position: reset forward 1 and position 2 switches in HID report
+          s_report[MASTER_CTRL_RPT_ROW] &= ~POS_2_SWITCH_MASK;
+          s_report[MASTER_CTRL_RPT_ROW] &= ~FORWARD_1_SWITCH_MASK;
+        } else {
+          // Forward 2 position: reset forward 1 switch
+          s_report[MASTER_CTRL_RPT_ROW] &= ~FORWARD_1_SWITCH_MASK;
+        }
+      }
+
+      // Break branch if break 1 switch is pressed
+      if (s_report[MASTER_CTRL_RPT_ROW] & BREAK_1_SWITCH_MASK) {
+        if (s_report[MASTER_CTRL_RPT_ROW] & BREAK_3_SWITCH_MASK) {
+          // Break 3 position: reset break 1 and position 2 switches in HID report
+          s_report[MASTER_CTRL_RPT_ROW] &= ~POS_2_SWITCH_MASK;
+          s_report[MASTER_CTRL_RPT_ROW] &= ~BREAK_1_SWITCH_MASK;
+        } else {
+          // Break 2 position:
+          s_report[MASTER_CTRL_RPT_ROW] &= ~BREAK_1_SWITCH_MASK;
+          // TODO: Add logic to set unused button
+        }
+      }
+    }
+
     USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, s_report, sizeof(s_report));
 
     HAL_Delay(10); /* 10ms delay, adjust as needed for your application */
-    
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -121,18 +154,17 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
@@ -140,39 +172,35 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
+                                RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
-  {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
     Error_Handler();
   }
 }
 
 /**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_GPIO_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
 
@@ -185,25 +213,27 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, BTN_R1_Pin|BTN_R2_Pin|BTN_R3_Pin|BTN_R4_Pin
-                          |BTN_R5_Pin|BTN_R6_Pin|BTN_R7_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB,
+                    BTN_R1_Pin | BTN_R2_Pin | BTN_R3_Pin | BTN_R4_Pin |
+                        BTN_R5_Pin | BTN_R6_Pin | BTN_R7_Pin,
+                    GPIO_PIN_RESET);
 
   /*Configure GPIO pins : BTN_C1_Pin BTN_C2_Pin BTN_C3_Pin BTN_C4_Pin */
-  GPIO_InitStruct.Pin = BTN_C1_Pin|BTN_C2_Pin|BTN_C3_Pin|BTN_C4_Pin;
+  GPIO_InitStruct.Pin = BTN_C1_Pin | BTN_C2_Pin | BTN_C3_Pin | BTN_C4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BTN_C5_Pin BTN_C6_Pin BTN_C7_Pin BTN_C8_Pin */
-  GPIO_InitStruct.Pin = BTN_C5_Pin|BTN_C6_Pin|BTN_C7_Pin|BTN_C8_Pin;
+  GPIO_InitStruct.Pin = BTN_C5_Pin | BTN_C6_Pin | BTN_C7_Pin | BTN_C8_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BTN_R1_Pin BTN_R2_Pin BTN_R3_Pin BTN_R4_Pin
                            BTN_R5_Pin BTN_R6_Pin BTN_R7_Pin */
-  GPIO_InitStruct.Pin = BTN_R1_Pin|BTN_R2_Pin|BTN_R3_Pin|BTN_R4_Pin
-                          |BTN_R5_Pin|BTN_R6_Pin|BTN_R7_Pin;
+  GPIO_InitStruct.Pin = BTN_R1_Pin | BTN_R2_Pin | BTN_R3_Pin | BTN_R4_Pin |
+                        BTN_R5_Pin | BTN_R6_Pin | BTN_R7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -219,32 +249,30 @@ static void MX_GPIO_Init(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  while (1)
-  {
+  while (1) {
   }
   /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t *file, uint32_t line) {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* User can add his own implementation to report the file name and line
+     number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
+     line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
