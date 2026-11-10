@@ -55,8 +55,8 @@ ADC_HandleTypeDef hadc1;
 /* USER CODE BEGIN PV */
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-/* Report layout: [report_id][buttons0][buttons1]..[buttons7] */
-static uint8_t s_report[8] = {1, 0, 0, 0, 0, 0, 0, 0};
+/* Report layout: [report_id][7 button bytes][16-bit X axis, little-endian] */
+static uint8_t s_report[10] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,6 +114,19 @@ int main(void)
     for (int i = 0; i < MATRIX_ROWS; i++) {
       s_report[i + 1] = button_state[i];
     }
+
+    if (HAL_ADC_Start(&hadc1) != HAL_OK) {
+      Error_Handler();
+    }
+    if (HAL_ADC_PollForConversion(&hadc1, 10) != HAL_OK) {
+      Error_Handler();
+    }
+    uint16_t axis_value = (uint16_t)HAL_ADC_GetValue(&hadc1);
+    if (HAL_ADC_Stop(&hadc1) != HAL_OK) {
+      Error_Handler();
+    }
+    s_report[8] = (uint8_t)(axis_value & 0xFF);
+    s_report[9] = (uint8_t)(axis_value >> 8);
 
     // Change master control report mappings
     // if position 2 switch is pressed, check for forward 1 and break 1 switches
@@ -239,7 +252,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();

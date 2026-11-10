@@ -103,6 +103,13 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
     0x75, 0x01,        /*   Report Size (1 bit) */
     0x95, 0x38,        /*   Report Count (56) */
     0x81, 0x02,        /*   Input (Data,Var,Abs) */
+    0x05, 0x01,        /*   Usage Page (Generic Desktop) */
+    0x09, 0x30,        /*   Usage (X) */
+    0x15, 0x00,        /*   Logical Minimum (0) */
+    0x26, 0xFF, 0x0F,  /*   Logical Maximum (4095) */
+    0x75, 0x10,        /*   Report Size (16 bits) */
+    0x95, 0x01,        /*   Report Count (1) */
+    0x81, 0x02,        /*   Input (Data,Var,Abs) */
   /* USER CODE END 0 */
   0xC0    /*     END_COLLECTION	             */
 };
@@ -220,4 +227,3 @@ static int8_t USBD_CUSTOM_HID_SendReport_FS(uint8_t *report, uint16_t len)
 /**
   * @}
   */
-

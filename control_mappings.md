@@ -5,3 +5,6 @@ Forward position 3: btn48 btn43 btn44
 Break position 1: btn45
 Break position 2: btn45 btn43
 Break position 3: btn45 btn43 btn46
+
+# Analog control
+X axis: PA0 / ADC1_IN0, 12-bit range (0-4095)
