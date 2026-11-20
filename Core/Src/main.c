@@ -35,11 +35,13 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define MASTER_CTRL_RPT_ROW 6
+#define MASTER_CTRL_RPT_ROW_2 7
 
 #define FORWARD_1_SWITCH_MASK 0x80 // button 48
 #define POS_2_SWITCH_MASK 0x04     // button 43
 #define FORWARD_3_SWITCH_MASK 0x08 // button 44
 #define BREAK_1_SWITCH_MASK 0x10   // button 45
+#define BREAK_2_SWITCH_MASK 0x01
 #define BREAK_3_SWITCH_MASK 0x20   // button 46
 
 /* USER CODE END PD */
@@ -128,6 +130,9 @@ int main(void)
     s_report[8] = (uint8_t)(axis_value & 0xFF);
     s_report[9] = (uint8_t)(axis_value >> 8);
 
+    //Reset break 2 position switch
+    s_report[MASTER_CTRL_RPT_ROW_2] &= ~BREAK_2_SWITCH_MASK;
+
     // Change master control report mappings
     // if position 2 switch is pressed, check for forward 1 and break 1 switches
     if (s_report[MASTER_CTRL_RPT_ROW] & POS_2_SWITCH_MASK) {
@@ -151,9 +156,10 @@ int main(void)
           s_report[MASTER_CTRL_RPT_ROW] &= ~POS_2_SWITCH_MASK;
           s_report[MASTER_CTRL_RPT_ROW] &= ~BREAK_1_SWITCH_MASK;
         } else {
-          // Break 2 position:
+          // Break 2 position: reset break 1 and position 2 switch, set break 2 position
           s_report[MASTER_CTRL_RPT_ROW] &= ~BREAK_1_SWITCH_MASK;
-          // TODO: Add logic to set unused button
+          s_report[MASTER_CTRL_RPT_ROW] &= ~POS_2_SWITCH_MASK;
+          s_report[MASTER_CTRL_RPT_ROW_2]|=BREAK_2_SWITCH_MASK;
         }
       }
     }
